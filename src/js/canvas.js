@@ -7,35 +7,175 @@ canvas.height = 576;
 
 const gravity = 0.5;
 
+function createImage(img) {
+  const newImg = new Image();
+  newImg.onload = () => {};
+  newImg.src = img;
+  return newImg;
+}
+
 const image = new Image();
 image.onload = () => {
   animate();
 };
-image.src = "../img/platform.png";
+image.src = "../img/background.png";
+
+/////////////////////
+//CLASSES
+class Sprite {
+  constructor(
+    position = { x: 0, y: 0 },
+    imageSrc,
+    frames = { max: 1 },
+    offset = { x: 0, y: 0 }
+  ) {
+    //sprite position
+    this.position = position;
+
+    //sprites src
+    this.image = new Image();
+    this.image.src = imageSrc;
+
+    //used to loop through our sprites, max is max frames and current is current frame which we default to 0
+    //elapsed and hold are related to the speed of which we proceed through our crop of images
+    this.frames = {
+      max: frames.max,
+      current: 0,
+      elapsed: 0,
+      hold: 3,
+    };
+
+    this.offset = offset;
+  }
+
+  draw() {
+    if (!this.image.complete) return;
+
+    //how we crop our image so we can loop through the correct amount of frames associated with that image
+    const cropWidth = this.image.width / this.frames.max;
+
+    //crop used within our drawImage method
+    const crop = {
+      position: {
+        x: cropWidth * this.frames.current,
+        y: 0,
+      },
+      width: this.image.width / this.frames.max,
+      height: this.image.height,
+    };
+
+    //drawImage that will crop our specifed sprite sheets into correct amounts related to that image.
+    c.drawImage(
+      this.image,
+      crop.position.x,
+      crop.position.y,
+      crop.width,
+      crop.height,
+      this.position.x + this.offset.x,
+      this.position.y + this.offset.y,
+      crop.width,
+      crop.height
+    );
+  }
+
+  update() {
+    //responsible for animation
+    this.frames.elapsed++;
+    if (this.frames.elapsed % this.frames.hold === 0) {
+      //how we reloop through our frames once we hit our max frames
+      this.frames.current++;
+      if (this.frames.current >= this.frames.max) {
+        this.frames.current = 0;
+      }
+    }
+  }
+}
 
 class Player {
-  constructor() {
-    this.position = {
-      x: 100,
-      y: 100,
-    };
+  constructor(position = { x: 0, y: 0 }) {
+    this.position = position;
+
     this.velocity = {
       x: 0,
       y: 0,
     };
 
-    this.width = 30;
-    this.height = 30;
+    this.width = 66;
+    this.height = 150;
 
     this.speed = 10;
+
+    this.frames = 0;
+
+    this.sprites = {
+      standRight: {
+        sheet: createImage("../img/spriteStandRight.png"),
+        //cropWidth because our sprites are different sizes
+        cropWidth: 177,
+        width: 66,
+      },
+      standLeft: {
+        sheet: createImage("../img/spriteStandLeft.png"),
+        cropWidth: 177,
+        width: 66,
+      },
+      runRight: {
+        sheet: createImage("../img/spriteRunRight.png"),
+        cropWidth: 341,
+        width: 127.875,
+      },
+      runLeft: {
+        sheet: createImage("../img/spriteRunLeft.png"),
+        cropWidth: 341,
+        width: 127.875,
+      },
+    };
+
+    this.currentSprite = this.sprites.standRight.sheet;
+    this.currentCropWidth = this.sprites.standRight.cropWidth;
   }
 
   draw() {
-    c.fillStyle = "red";
-    c.fillRect(this.position.x, this.position.y, this.width, this.height);
+    // c.fillStyle = "red";
+    // c.fillRect(this.position.x, this.position.y, this.width, this.height);
+    c.drawImage(
+      this.currentSprite,
+      //this part is how we make our character look animated
+      this.currentCropWidth * this.frames,
+      0,
+      this.currentCropWidth,
+      400,
+      this.position.x,
+      this.position.y,
+      this.width,
+      this.height
+    );
   }
 
   update() {
+    this.frames++;
+    if (
+      this.frames > 59 &&
+      this.currentSprite === this.sprites.standRight.sheet
+    ) {
+      this.frames = 0;
+    } else if (
+      this.frames > 59 &&
+      this.currentSprite === this.sprites.standLeft.sheet
+    ) {
+      this.frames = 0;
+    } else if (
+      this.frames > 28 &&
+      this.currentSprite === this.sprites.runRight.sheet
+    ) {
+      this.frames = 0;
+    } else if (
+      this.frames > 28 &&
+      this.currentSprite === this.sprites.runLeft.sheet
+    ) {
+      this.frames = 0;
+    }
+
     this.draw();
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
@@ -47,70 +187,40 @@ class Player {
   }
 }
 
-//position = { x: 0, y: 0 }
-class Platform {
-  constructor({ x, y }) {
-    this.position = {
-      x,
-      y,
-    };
+class Platform extends Sprite {
+  constructor(position = { x: 0, y: 0 }) {
+    super({ position }, "../img/platform.png");
 
-    this.image = image;
+    this.position = position;
 
-    this.width = image.width;
-    this.height = image.height;
-  }
-
-  draw() {
-    // if (!this.image.complete) return;
-    // c.fillStyle = "blue";
-    // c.fillRect(this.position.x, this.position.y, this.width, this.height);
-
-    c.drawImage(this.image, this.position.x, this.position.y);
+    this.width = 580;
+    this.height = 125;
   }
 }
 
-class GenericObject {
-  constructor({ x, y, image }) {
-    this.position = {
-      x,
-      y,
-    };
+class GenericObject extends Sprite {
+  constructor(position = { x: 0, y: 0 }) {
+    super({ position }, "../img/hills.png");
 
-    this.image = image;
+    this.position = position;
 
-    this.width = image.width;
-    this.height = image.height;
-  }
-
-  draw() {
-    c.drawImage(this.image, this.position.x, this.position.y);
+    this.width = 100;
+    this.height = 100;
   }
 }
 
-class SmallPlatform {
-  constructor({ x, y, image }) {
-    this.position = {
-      x,
-      y,
-    };
+class SmallPlatform extends Sprite {
+  constructor(position = { x: 0, y: 0 }) {
+    super({ position }, "../img/platformSmallTall.png");
 
-    this.image = image;
+    this.position = position;
 
-    this.width = image.width;
-    this.height = image.height;
-  }
-
-  draw() {
-    c.drawImage(this.image, this.position.x, this.position.y);
+    this.width = 291;
+    this.height = 227;
   }
 }
 
-function createImage(imageSrc) {
-  const image = new Image();
-  image.src = imageSrc;
-  return image;
-}
+let lastKey;
 
 const keys = {
   right: {
@@ -121,7 +231,7 @@ const keys = {
   },
 };
 
-let player = new Player();
+let player = new Player({ x: 100, y: 100 });
 
 let platforms = [];
 
@@ -132,21 +242,20 @@ let genericObjects = [];
 let scrollOffset = 0;
 
 function init() {
-  player = new Player();
+  player = new Player({ x: 100, y: 100 });
 
   platforms = [
     new Platform({ x: -1, y: 470 }),
-    new Platform({ x: image.width - 3, y: 470 }),
-    new Platform({ x: image.width * 2 + 200, y: 470 }),
-    new Platform({ x: image.width * 3 + 400, y: 470 }),
-    new Platform({ x: image.width * 4 + 1200, y: 470 }),
+    new Platform({ x: 580 - 3, y: 470 }),
+    new Platform({ x: 580 * 2 - 3 + 200, y: 470 }),
+    new Platform({ x: platforms.width * 3 + 400, y: 470 }),
+    new Platform({ x: platforms.width * 4 + 1200, y: 470 }),
   ];
 
   smallPlatforms = [
     new SmallPlatform({
       x: 2900,
       y: 270,
-      image: createImage("../img/platformSmallTall.png"),
     }),
   ];
 
@@ -154,12 +263,6 @@ function init() {
     new GenericObject({
       x: -1,
       y: -1,
-      image: createImage("../img/background.png"),
-    }),
-    new GenericObject({
-      x: -1,
-      y: -1,
-      image: createImage("../img/hills.png"),
     }),
   ];
 
@@ -169,8 +272,9 @@ function init() {
 init();
 function animate() {
   requestAnimationFrame(animate);
-  c.fillStyle = "white";
-  c.fillRect(0, 0, canvas.width, canvas.height);
+  // c.fillStyle = "white";
+  // c.fillRect(0, 0, canvas.width, canvas.height);
+  c.drawImage(image, 0, 0);
 
   genericObjects.forEach((object) => {
     object.draw();
@@ -273,6 +377,42 @@ function animate() {
     }
   });
 
+  //for our run transitions
+  if (
+    keys.right.pressed &&
+    lastKey === "right" &&
+    player.currentSprite !== player.sprites.runRight.sheet
+  ) {
+    player.frames = 1;
+    player.currentSprite = player.sprites.runRight.sheet;
+    player.currentCropWidth = player.sprites.runRight.cropWidth;
+    player.width = player.sprites.runRight.width;
+  } else if (
+    keys.left.pressed &&
+    lastKey === "left" &&
+    player.currentSprite !== player.sprites.runLeft.left
+  ) {
+    player.currentSprite = player.sprites.runLeft.sheet;
+    player.currentCropWidth = player.sprites.runLeft.cropWidth;
+    player.width = player.sprites.runLeft.width;
+  } else if (
+    !keys.left.pressed &&
+    lastKey === "left" &&
+    player.currentSprite !== player.sprites.standLeft.sheet
+  ) {
+    player.currentSprite = player.sprites.standLeft.left;
+    player.currentCropWidth = player.sprites.standLeft.cropWidth;
+    player.width = player.sprites.standLeft.width;
+  } else if (
+    !keys.right.pressed &&
+    lastKey === "right" &&
+    player.currentSprite !== player.sprites.standRight.sheet
+  ) {
+    player.currentSprite = player.sprites.standRight.right;
+    player.currentCropWidth = player.sprites.standRight.cropWidth;
+    player.width = player.sprites.standRight.width;
+  }
+
   //smalll platform collision detection
   smallPlatforms.forEach((small) => {
     small.draw();
@@ -289,37 +429,41 @@ function animate() {
   });
 }
 
-addEventListener("keydown", ({ keyCode }) => {
-  switch (keyCode) {
-    case 65:
+addEventListener("keydown", ({ key }) => {
+  key.toLowerCase();
+  switch (key) {
+    case "a":
       console.log("left");
       keys.left.pressed = true;
+      lastKey = "left";
       break;
-    case 83:
+    case "s":
       console.log("down");
       break;
-    case 68:
+    case "d":
       keys.right.pressed = true;
+      lastKey = "right";
       break;
-    case 87:
+    case "w":
       player.velocity.y -= 25;
       break;
   }
 });
 
-addEventListener("keyup", ({ keyCode }) => {
-  switch (keyCode) {
-    case 65:
+addEventListener("keyup", ({ key }) => {
+  key.toLowerCase();
+  switch (key) {
+    case "a":
       console.log("left");
       keys.left.pressed = false;
       break;
-    case 83:
+    case "s":
       console.log("down");
       break;
-    case 68:
+    case "d":
       keys.right.pressed = false;
       break;
-    case 87:
+    case "w":
       player.velocity.y = 0;
       break;
   }

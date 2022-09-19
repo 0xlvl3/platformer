@@ -1,0 +1,11 @@
+{
+  "folders": [
+	{
+		"name": "platformer",
+		"path": "../.."
+	}
+],
+  "settings": {
+    "liveServer.settings.multiRootWorkspaceName": "platformer"
+  }
+}
