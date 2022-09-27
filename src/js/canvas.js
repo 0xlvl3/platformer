@@ -377,20 +377,19 @@ function animate() {
     }
   });
 
-  //for our run transitions
+  // for our run transitions
   if (
     keys.right.pressed &&
     lastKey === "right" &&
     player.currentSprite !== player.sprites.runRight.sheet
   ) {
-    player.frames = 1;
     player.currentSprite = player.sprites.runRight.sheet;
     player.currentCropWidth = player.sprites.runRight.cropWidth;
     player.width = player.sprites.runRight.width;
   } else if (
     keys.left.pressed &&
     lastKey === "left" &&
-    player.currentSprite !== player.sprites.runLeft.left
+    player.currentSprite !== player.sprites.runLeft.sheet
   ) {
     player.currentSprite = player.sprites.runLeft.sheet;
     player.currentCropWidth = player.sprites.runLeft.cropWidth;
@@ -400,7 +399,7 @@ function animate() {
     lastKey === "left" &&
     player.currentSprite !== player.sprites.standLeft.sheet
   ) {
-    player.currentSprite = player.sprites.standLeft.left;
+    player.currentSprite = player.sprites.standLeft.sheet;
     player.currentCropWidth = player.sprites.standLeft.cropWidth;
     player.width = player.sprites.standLeft.width;
   } else if (
@@ -408,7 +407,7 @@ function animate() {
     lastKey === "right" &&
     player.currentSprite !== player.sprites.standRight.sheet
   ) {
-    player.currentSprite = player.sprites.standRight.right;
+    player.currentSprite = player.sprites.standRight.sheet;
     player.currentCropWidth = player.sprites.standRight.cropWidth;
     player.width = player.sprites.standRight.width;
   }
